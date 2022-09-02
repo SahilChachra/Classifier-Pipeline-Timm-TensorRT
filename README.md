@@ -1,0 +1,25 @@
+# Template for Multiclass classifier in PyTorch for Classification with Timm model Implementation and TensorRT Export
+
+## To/Do
+1. Custom model file with Timm models
+2. Custom dataset file
+3. Multiple LR Schedulers
+4. Categorical Labels - [1], [2], [3]...
+5. Early stopping
+6. Save model checkpoint and weight file as accuracy improves
+7. Prints LR, Train Acc , Train loss, Val Acc and Val loss for each epoch.
+8. Run validation on Train and test set and saved ConfusionMatrix as PNG.
+9. Albumentations for image augmentation
+10. Use of garbage collector and torch's method to clear GPU cache
+11. Add options for Loss functions
+12. Display Hardware usage
+13. Save training history
+
+## References
+1. [Scene Classification Dataset](https://www.kaggle.com/datasets/nitishabharathi/scene-classification)
+2. Kaggle Notebook : [Transfer Learning with Timm](https://www.kaggle.com/code/hinepo/transfer-learning-with-timm-models-and-pytorch)
+3. Kaggle Notebook : [EfficientNet Mixup Leak free](https://www.kaggle.com/code/debarshichanda/efficientnetv2-mixup-leak-free)
+4. Kaggle Notebook : [Scene classification](https://www.kaggle.com/code/krishnayogi/scene-classification-using-transfer-learning)
+5. Convert PyTorch model to TensorRT - [Link](https://learnopencv.com/how-to-convert-a-model-from-pytorch-to-tensorrt-and-speed-up-inference/)
+
+## :heart: Made by [Sahil Chachra](https://github.com/SahilChachra)
