@@ -14,6 +14,7 @@
 11. Add options for Loss functions
 12. Display Hardware usage
 13. Save training history
+14. Heatmap of features
 
 ## References
 1. [Scene Classification Dataset](https://www.kaggle.com/datasets/nitishabharathi/scene-classification)
