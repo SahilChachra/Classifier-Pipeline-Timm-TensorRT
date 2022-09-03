@@ -1,16 +1,21 @@
-# Template for Multiclass classifier in PyTorch for Classification with Timm model Implementation and TensorRT Export
+# Template for Binary/Multiclass classifier in PyTorch for Classification with Timm model Implementation and TensorRT Export
 
-## To/Do
+## Features/Options
 1. Custom model file with Timm models
 2. Custom dataset file
-3. Multiple LR Schedulers
 4. Categorical Labels - [1], [2], [3]...
-5. Early stopping
-6. Save model checkpoint and weight file as accuracy improves
 7. Prints LR, Train Acc , Train loss, Val Acc and Val loss for each epoch.
 8. Run validation on Train and test set and saved ConfusionMatrix as PNG.
-9. Albumentations for image augmentation
 10. Use of garbage collector and torch's method to clear GPU cache
+
+## To/Do
+
+1. Add Output layer in the model (Binary/Multiclass Classifier)
+2. Create sample model from timm and check output of the model.
+3. Multiple LR Schedulers (use if/else)
+5. Early stopping
+6. Save model checkpoint and weight file as accuracy improves
+9. Albumentations for image augmentation
 11. Add options for Loss functions
 12. Display Hardware usage
 13. Save training history

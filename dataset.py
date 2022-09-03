@@ -4,7 +4,7 @@ import numpy as np
 from torch.utils.data import Dataset
 
 class CustomDataset(Dataset):
-    def __init__(self, images_path, labels = None , test=False, transform=None):
+    def __init__(self, images_path, labels = None, test=False, transform=None):
         self.images_path = images_path
         self.test = test
         if self.test == False:
@@ -19,7 +19,7 @@ class CustomDataset(Dataset):
         image = cv2.imread(self.images_path[index])
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = torch.tensor(image)
-        image = image.permute(2, 0k, 1)
+        image = image.permute(2, 0, 1)
         image_transformed = self.images_transform(image=image)
         
         if self.test == False:
