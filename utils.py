@@ -13,11 +13,11 @@ def train_func(epoch, model, loader, device, optimizer, loss_function):
     
     model.train()
 
+    y_pred_list = []
+    y_true_list=[]
     running_loss = 0
-    pred_for_acc = []
-    labels_for_acc = []
-
     curr_num_of_data_read = 0
+    # correct = 0
 
     progress = tqdm(enumerate(loader), desc="Training", total=len(loader))
     
@@ -30,25 +30,38 @@ def train_func(epoch, model, loader, device, optimizer, loss_function):
         optimizer.step()
     
         running_loss += loss.item()*labels.shape[0]
-        labels_for_acc = np.concatenate((labels_for_acc, labels.cpu().detach().numpy()), axis=0)
-        pred_for_acc = np.concatenate((pred_for_acc, np.argmax(predictions.cpu().detach().numpy(), axis=1)),axis=0)
-        curr_num_of_data_read += images.shape[0]
-        _train_accuracy = accuracy_score(labels_for_acc, pred_for_acc)
 
-        progress.set_postfix(Epoch=epoch, Train_loss=running_loss/curr_num_of_data_read, Train_acc = _train_accuracy, LR=optimizer.param_groups[0]['lr'])
+        y_pred, y_true = torch.argmax(predictions, axis=1), labels.long().squeeze()
+        
+        y_pred_list = np.concatenate((y_pred_list, y_pred.cpu().detach().numpy()), axis=0)
+        y_true_list = np.concatenate((y_true_list, y_true.cpu().detach().numpy()), axis=0)
+        
+        running_acc = accuracy_score(y_pred_list, y_true_list)
+        #correct += (y_pred == y_true).type(torch.float).sum().item()
+
+        curr_num_of_data_read += images.shape[0]
+        
+        # _train_accuracy = correct/curr_num_of_data_read
+
+        progress.set_postfix(Epoch=epoch, Train_loss=running_loss/curr_num_of_data_read, Train_acc = running_acc, LR=optimizer.param_groups[0]['lr'])
 
         torch.cuda.empty_cache()
         del images, labels, loss, predictions
         gc.collect()
-        
-    return model, optimizer, running_loss/curr_num_of_data_read, _train_accuracy
+    
+    epoch_accuracy = accuracy_score(y_pred_list, y_true_list)
+    return model, optimizer, running_loss/curr_num_of_data_read, epoch_accuracy
 
 def validation_func(epoch, model, loader, device, loss_function):
     
     running_loss = 0
-    preds_for_acc = []
-    labels_for_acc = []
-    
+    correct_epoch = 0
+    correct_iter = 0
+    size = loader.size
+
+    y_pred_list = []
+    y_true_list = []
+
     progress = tqdm(loader, desc="Validation", total=len(loader))
     curr_num_of_data_read = 0
     _running_accuracy = 0.0
@@ -64,11 +77,14 @@ def validation_func(epoch, model, loader, device, loss_function):
         loss = loss_function(predictions, labels)
 
         running_loss += loss.item()*labels.shape[0]
-        labels_for_acc = np.concatenate((labels_for_acc,labels.cpu().detach().numpy()), axis=0)
-        preds_for_acc = np.concatenate((preds_for_acc,np.argmax(predictions.cpu().detach().numpy(), axis=1)), axis=0)
+        
+        y_pred, y_true = torch.argmax(predictions, axis=1), labels.long().squeeze()
 
+        y_pred_list = np.concatenate((y_pred_list, y_pred.cpu().detach().numpy()), axis=0)
+        y_true_list = np.concatenate((y_true_list, y_true.cpu().detach().numpy()), axis=0)
+        
+        _running_accuracy = accuracy_score(y_pred_list, y_true_list)
         curr_num_of_data_read += images.shape[0]
-        _running_accuracy = accuracy_score(labels_for_acc, preds_for_acc)
 
         progress.set_postfix(Epoch=epoch, Val_loss=running_loss/curr_num_of_data_read, Val_accuracy =_running_accuracy)
 
@@ -76,8 +92,8 @@ def validation_func(epoch, model, loader, device, loss_function):
         del predictions, images, labels, loss
         gc.collect()
         
-    accuracy = accuracy_score(labels_for_acc, preds_for_acc)
-    conf_matrix = confusion_matrix(labels_for_acc, preds_for_acc)
+    accuracy = accuracy_score(y_pred_list, y_true_list)
+    conf_matrix = confusion_matrix(y_true_list, y_pred_list)
 
     return running_loss/curr_num_of_data_read, accuracy, conf_matrix
 
