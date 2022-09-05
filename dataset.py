@@ -14,9 +14,9 @@ class CustomDataset(Dataset):
         return len(self.annotations)
     
     def __getitem__(self, index):
-        img_path = os.path.join(self.root_dir, self.data_csv.iloc[index, 0])
+        img_path = os.path.join(self.root_dir, self.data_csv.iloc[index, "image_path"])
         image = Image.open(img_path)
-        label = torch.tensor(int(self.data_csv.iloc[index, 1]))
+        label = torch.tensor(int(self.data_csv.iloc[index, "label"]))
         if self.transform:
             image = self.transform(image)
         return [image, label]
