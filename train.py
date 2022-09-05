@@ -98,15 +98,19 @@ def main(args):
 
     # Setting up transforms
     customtransforms = {
-        "train": A.Compose(
-            [A.Resize(img_size, img_size),
-            A.Flip(), A.ShiftScaleRotate(rotate_limit=1.0, p=0.8),
+        "train": A.Compose([
+            A.Resize(img_size, img_size),
+            A.Flip(), 
+            A.ShiftScaleRotate(rotate_limit=1.0, p=0.8),
             A.Normalize(p=1),
-            ToTensorV2(p=1.0)]
+            ToTensorV2(p=1.0)
+            ]
         ),
-        "valid" : A.Compose([A.Resize(img_size, img_size),
-                    A.Normalize(p=1.0),
-                    ToTensorV2(p=1.0)])
+        "valid" : A.Compose([
+                  A.Resize(img_size, img_size),
+                  A.Normalize(p=1.0),
+                  ToTensorV2(p=1.0)
+            ])
         }
     
     # Setting up dataloaders
@@ -238,12 +242,12 @@ def main(args):
 
     # Generate confusion matrix for Train and Val set
     logger.info(f"Generating Confusion matrix for Train and Validation set using the best model")
-    
-    valid_loss_epoch, valid_accuracy_epoch, conf_matrix = validation_func(epochs+1, best_model, valid_loader, device, loss_function)
-    save_confusion_matrix(conf_matrix, labels, exp_name, name="Valid_ConfusionMatrix")
 
     valid_loss_epoch, valid_accuracy_epoch, conf_matrix = validation_func(epochs+1, best_model, train_loader, device, loss_function)
     save_confusion_matrix(conf_matrix, labels, exp_name, name="Train_ConfusionMatrix")
+
+    valid_loss_epoch, valid_accuracy_epoch, conf_matrix = validation_func(epochs+1, best_model, valid_loader, device, loss_function)
+    save_confusion_matrix(conf_matrix, labels, exp_name, name="Valid_ConfusionMatrix")
 
     del best_model
     gc.collect()
@@ -262,7 +266,7 @@ def arguement_parser():
     parser.add_argument('--dataset', type=str, default="/home/sahil/Documents/Classifiers/datasets/Plant_health_dataset", help='Path to dataset')
     parser.add_argument('--split', type=float, default=0.20, help='Validation data split ratio')
     parser.add_argument('--target_size', type=int, default=4, help='Number of classes')
-    parser.add_argument('--early_stop', type=int, default=7, help='Early stop threshold')
+    parser.add_argument('--early_stop', type=int, default=5, help='Early stop threshold')
     parser.add_argument('--loss_func', type=str, default="CrossEntropyLoss", choices=["CrossEntropyLoss", "FocalLoss"], help="Select loss function")
     parser.add_argument('--save_checkpoint_folder', type=str, default="checkpoint", help="Save model checkpoint folder")
     parser.add_argument('--save_model_folder', type=str, default="weights", help="Save weight file folder")
