@@ -55,10 +55,7 @@ def train_func(epoch, model, loader, device, optimizer, loss_function):
 def validation_func(epoch, model, loader, device, loss_function):
     
     running_loss = 0
-    correct_epoch = 0
-    correct_iter = 0
-    size = loader.size
-
+    
     y_pred_list = []
     y_true_list = []
 
@@ -82,9 +79,10 @@ def validation_func(epoch, model, loader, device, loss_function):
 
         y_pred_list = np.concatenate((y_pred_list, y_pred.cpu().detach().numpy()), axis=0)
         y_true_list = np.concatenate((y_true_list, y_true.cpu().detach().numpy()), axis=0)
+
+        curr_num_of_data_read += images.shape[0]
         
         _running_accuracy = accuracy_score(y_pred_list, y_true_list)
-        curr_num_of_data_read += images.shape[0]
 
         progress.set_postfix(Epoch=epoch, Val_loss=running_loss/curr_num_of_data_read, Val_accuracy =_running_accuracy)
 
