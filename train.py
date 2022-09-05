@@ -195,8 +195,8 @@ def main(args):
         if valid_accuracy_epoch > max_val_acc:
             logger.info(f"Accuracy improved from {max_val_acc:.3f} to {valid_accuracy_epoch:.3f}!")
             state = {"epoch":epoch, 'state_dict':model.state_dict(), 'optimizer':optimizer.state_dict(), "loss":train_loss_epoch}
-            torch.save(state, os.path.join(save_checkpoint_folder,f"leafclassifier_statedict_ep{epoch}_{valid_accuracy_epoch:.3f}.pt"))
-            torch.save(model, os.path.join(save_model_folder,f"leafclassifier_ep{epoch}_{valid_accuracy_epoch:.3f}.pt"))
+            torch.save(state, os.path.join(save_checkpoint_folder,f"classifier_statedict_ep{epoch}_{valid_accuracy_epoch:.3f}.pt"))
+            torch.save(model, os.path.join(save_model_folder,f"classifier_ep{epoch}_{valid_accuracy_epoch:.3f}.pt"))
             max_val_acc = valid_accuracy_epoch
             no_val_acc_improve = 0
             best_model = model
@@ -223,14 +223,14 @@ def main(args):
             logger.info(f"Validation accuracy did not approve for upto {no_val_acc_improve} epoch(s). Stopping training...")
             logger.info(f"Saving State dictionary")
             state = {"epoch":epoch, 'state_dict':model.state_dict(), 'optimizer':optimizer.state_dict(), "loss":train_loss_epoch}
-            torch.save(state, os.path.join(save_checkpoint_folder,f"leafclassifier_statedict_{epoch}.pt"))
+            torch.save(state, os.path.join(save_checkpoint_folder,f"classifier_statedict_{epoch}.pt"))
             break
         
         # For last epoch
         if epoch == epochs+1:
             logger.info(f"Training job is ending. Saving final epoch's model state diectionary.")
             state = {"epoch":epoch, 'state_dict':model.state_dict(), 'optimizer':optimizer.state_dict(), "loss":train_loss_epoch}
-            torch.save(state, os.path.join(save_checkpoint_folder,f"leafclassifier_statedict_{epoch}.pt"))
+            torch.save(state, os.path.join(save_checkpoint_folder,f"classifier_statedict_{epoch}.pt"))
     
     end_time = time.time() # Timer for overall training time
     total_training_time = end_time - start_time
