@@ -1,3 +1,4 @@
+from ast import arg
 import os
 import time
 import argparse
@@ -27,9 +28,9 @@ from utils import get_image_path, train_func, validation_func, save_confusion_ma
 def prepare_dataset(root_dataset, train_csv_path, split):
     train_data = pd.read_csv(os.path.join(root_dataset, train_csv_path))
 
-    train_data["image_path"] = train_data["image_id"].apply(get_image_path)
+    train_data["image_path"] = train_data["image_name"].apply(get_image_path)
 
-    train_labels = train_data.loc[:, "healthy":"scab"]
+    train_labels = train_data[:, "label"]
 
     train_paths, valid_paths, train_labels, valid_labels = train_test_split(train_data["image_path"], train_labels, test_size=split, random_state=22, stratify=train_labels)
 
@@ -43,7 +44,8 @@ def prepare_dataset(root_dataset, train_csv_path, split):
 @logger.catch
 def main(args):
 
-    # Set arguments 
+    # Set arguments
+    model_name = args.model_name
     epochs = args.epochs
     batch_size = args.batch_size
     img_size = args.img_size
@@ -57,11 +59,19 @@ def main(args):
     early_stop = args.early_stop
     loss_func = args.loss_func
     exp_name = args.exp_name
+    # image_folder = args.image_folder
+
     save_checkpoint_folder = os.path.join(exp_name, args.save_checkpoint_folder)
     save_model_folder = os.path.join(exp_name,args.save_model_folder)
     
+    
     # Display input parameters
-    logger.info(f"Training Settings : Epochs = {epochs}, batch_size = {batch_size}, img_size = {img_size}, optimizer_name = {optimizer_name}, learning_rate = {learning_rate}, lr_scheduler = {lr_scheduler}, split ratio = {split}, loss_func = {loss_func}, save_checkpoint_folder = {save_checkpoint_folder}, save_model_folder = {save_model_folder}, exp_name = {exp_name}")
+    logger.info(f"Training Settings : Epochs = {epochs}, \
+                    batch_size = {batch_size}, img_size = {img_size}, \
+                    optimizer_name = {optimizer_name}, learning_rate = {learning_rate}, \
+                    lr_scheduler = {lr_scheduler}, split ratio = {split}, loss_func = {loss_func}, \
+                    save_checkpoint_folder = {save_checkpoint_folder}, save_model_folder = {save_model_folder}, \
+                    exp_name = {exp_name}")
 
     # Setup folders to save model, checkpoints and confusion matrix
     if not os.path.exists(exp_name):
@@ -74,7 +84,7 @@ def main(args):
         os.mkdir(save_model_folder)
 
     train_csv_path = os.path.join(root_dataset, "train.csv")
-    images = os.path.join(root_dataset, "images")
+    # images = os.path.join(root_dataset, image_folder)
 
     # Setup Device to train
     if "cuda" in device and torch.cuda.is_available():
@@ -100,14 +110,14 @@ def main(args):
         }
     
     # Setting up dataloaders
-    train_images = CustomDataset(images_path=train_paths, labels=train_labels, transform=customtransforms["train"])
+    train_images = CustomDataset(data_csv=train_paths, root_dir=root_dataset, transform=customtransforms["train"])
     train_loader = DataLoader(train_images, shuffle=True, batch_size=batch_size)
 
-    valid_images = CustomDataset(images_path=valid_paths, labels=valid_labels, transform=customtransforms["valid"])
+    valid_images = CustomDataset(data_csv=valid_paths, root_dir=root_dataset, transform=customtransforms["valid"])
     valid_loader = DataLoader(valid_images, shuffle=True, batch_size=batch_size)
 
     # Set up the model, loss function and optimizers
-    model = CustomModel(target_size=target_size, pretrained=True)
+    model = CustomModel(model_name=model_name, target_size=target_size, pretrained=True)
     model.to(device)
 
     # Set up loss function
@@ -152,7 +162,12 @@ def main(args):
     lrs = []
 
     # Create labels list for confusion matrix
-    labels = ["healthy","multiple_diseases","rust","scab"]
+    labels = args.labels.split(",")
+    labels = [i.strip() for i in labels]
+
+    if len(labels) != target_size:
+        print("Number of labels and target size do not match!")
+        exit(0)
 
     # Initialize some extra variables
     max_val_acc = -np.inf # Initialize maximum accuracy with -infinity
@@ -236,6 +251,7 @@ def main(args):
 def arguement_parser():
     parser = argparse.ArgumentParser(description="Parse input for model training")
 
+    parser.add_argument('--model_name', type=str, default="resnet50", help="Model name from Timm")
     parser.add_argument('--epochs', type=int, default=5, help='Total num of epochs')
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size of training/validation')
     parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
@@ -251,6 +267,8 @@ def arguement_parser():
     parser.add_argument('--save_checkpoint_folder', type=str, default="checkpoint", help="Save model checkpoint folder")
     parser.add_argument('--save_model_folder', type=str, default="weights", help="Save weight file folder")
     parser.add_argument('--exp_name', type=str, default="exp1", help="Save experiment data")
+    parser.add_argument('--labels', type=str, default="road, hill, mountain", help="Comma seperated labels")
+    # parser.add_argument('--image_folder', type=str, default="train", help="Images folder name")
 
     args = parser.parse_args()
     return args

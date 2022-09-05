@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 
-def get_image_path(image):
-    return os.path.join("/home/sahil/Documents/Classifiers/datasets/Plant_health_dataset", "images", image+".jpg")
+def get_image_path(image_name):
+    return os.path.join("/home/sahil/Documents/Classifiers/datasets/scene_classification", "train", image_name)
 
 def train_func(epoch, model, loader, device, optimizer, loss_function):
     
