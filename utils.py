@@ -31,10 +31,19 @@ def train_func(epoch, model, loader, device, optimizer, loss_function):
     
         running_loss += loss.item()*labels.shape[0]
 
-        y_pred, y_true = torch.argmax(predictions, axis=1), labels.long().squeeze()
+        # THIS CODE WAS CONSIDERING INDEX AS LABEL (ARGMAX RETURNS INDEX NOT LABEL)
+        '''y_pred, y_true = torch.argmax(predictions, axis=1), labels.long().squeeze()
         
         y_pred_list = np.concatenate((y_pred_list, y_pred.cpu().detach().numpy()), axis=0)
-        y_true_list = np.concatenate((y_true_list, y_true.cpu().detach().numpy()), axis=0)
+        y_true_list = np.concatenate((y_true_list, y_true.cpu().detach().numpy()), axis=0)'''
+
+        y_true = labels.long().squeeze()
+        probabilities = torch.nn.functional.softmax(predictions, dim=1)
+        top_prob, top_label = torch.topk(probabilities, 1)
+        top_label = torch.flatten(top_label)
+        
+        y_pred_list = np.concatenate((y_pred_list, top_label.cpu().detach().numpy()), axis=0)
+        y_true_list = np.concatenate((y_true_list, y_true.cpu().detach().numpy()),axis=0)
         
         running_acc = accuracy_score(y_pred_list, y_true_list)
         #correct += (y_pred == y_true).type(torch.float).sum().item()
@@ -75,10 +84,19 @@ def validation_func(epoch, model, loader, device, loss_function):
 
         running_loss += loss.item()*labels.shape[0]
         
-        y_pred, y_true = torch.argmax(predictions, axis=1), labels.long().squeeze()
+        # THIS CODE WAS CONSIDERING INDEX AS LABEL (ARGMAX RETURNS INDEX NOT LABEL)
+        '''y_pred, y_true = torch.argmax(predictions, axis=1), labels.long().squeeze()
 
         y_pred_list = np.concatenate((y_pred_list, y_pred.cpu().detach().numpy()), axis=0)
-        y_true_list = np.concatenate((y_true_list, y_true.cpu().detach().numpy()), axis=0)
+        y_true_list = np.concatenate((y_true_list, y_true.cpu().detach().numpy()), axis=0)'''
+
+        y_true = labels.long().squeeze()
+        probabilities = torch.nn.functional.softmax(predictions, dim=1)
+        top_prob, top_label = torch.topk(probabilities, 1)
+        top_label = torch.flatten(top_label)
+        
+        y_pred_list = np.concatenate((y_pred_list, top_label.cpu().detach().numpy()), axis=0)
+        y_true_list = np.concatenate((y_true_list, y_true.cpu().detach().numpy()),axis=0)
 
         curr_num_of_data_read += images.shape[0]
         
