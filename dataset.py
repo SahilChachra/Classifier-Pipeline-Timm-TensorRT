@@ -4,7 +4,7 @@ import os
 import pandas as pd
 from torch.utils.data import Dataset
 
-class SceneDataset(Dataset):
+class CustomDataset(Dataset):
     def __init__(self, data_csv, root_dir, transform=None):
         self.data_csv = pd.read_csv(data_csv)
         self.root_dir = root_dir
