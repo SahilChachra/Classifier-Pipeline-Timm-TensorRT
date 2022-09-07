@@ -7,16 +7,16 @@
 7. Prints LR, Train Acc , Train loss, Val Acc and Val loss for each epoch.
 8. Run validation on Train and test set and saved ConfusionMatrix as PNG.
 10. Use of garbage collector and torch's method to clear GPU cache
+5. Early stopping
+6. Save model checkpoint and weight file as accuracy improves
+9. Albumentations for image augmentation
+11. Add options for Loss functions
+3. Multiple LR Schedulers
 
 ## To/Do
 
 1. Add Output layer in the model (Binary/Multiclass Classifier)
 2. Create sample model from timm and check output of the model.
-3. Multiple LR Schedulers (use if/else)
-5. Early stopping
-6. Save model checkpoint and weight file as accuracy improves
-9. Albumentations for image augmentation
-11. Add options for Loss functions
 12. Display Hardware usage
 13. Save training history
 14. Heatmap of features
