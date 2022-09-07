@@ -41,4 +41,4 @@ class CustomDatasetInf(Dataset):
         image = io.imread(img_path)
         if self.transform:
             image = self.transform(image=image)["image"]
-            return [image]
+        return [image, img_path]
