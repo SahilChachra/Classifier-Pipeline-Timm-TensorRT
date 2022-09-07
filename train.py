@@ -6,7 +6,7 @@ from sched import scheduler
 from tqdm import tqdm
 import gc 
 import shutil
-
+from skimage import io
 import torch
 import torch.nn as nn
 from torch import optim
@@ -26,11 +26,11 @@ from model import CustomModel
 from utils import get_image_path, train_func, validation_func, save_confusion_matrix
 
 def prepare_dataset(root_dataset, train_csv_path, split):
-    train_data = pd.read_csv(os.path.join(root_dataset, train_csv_path))
+    train_data = pd.read_csv(train_csv_path)
 
     train_data["image_path"] = train_data["image_name"].apply(get_image_path)
 
-    train_labels = train_data[:, "label"]
+    train_labels = train_data["label"]
 
     train_paths, valid_paths, train_labels, valid_labels = train_test_split(train_data["image_path"], train_labels, test_size=split, random_state=22, stratify=train_labels)
 
@@ -59,6 +59,7 @@ def main(args):
     early_stop = args.early_stop
     loss_func = args.loss_func
     exp_name = args.exp_name
+    labels = args.labels
     # image_folder = args.image_folder
 
     save_checkpoint_folder = os.path.join(exp_name, args.save_checkpoint_folder)
@@ -95,10 +96,11 @@ def main(args):
     
     # Create dataset
     train_paths, train_labels, valid_paths, valid_labels = prepare_dataset(root_dataset, train_csv_path, split)
-
+    
     # Setting up transforms
     customtransforms = {
         "train": A.Compose([
+            #A.ToPILImage(),
             A.Resize(img_size, img_size),
             A.Flip(), 
             A.ShiftScaleRotate(rotate_limit=1.0, p=0.8),
@@ -107,6 +109,7 @@ def main(args):
             ]
         ),
         "valid" : A.Compose([
+                  #A.ToPILImage(),
                   A.Resize(img_size, img_size),
                   A.Normalize(p=1.0),
                   ToTensorV2(p=1.0)
@@ -114,10 +117,10 @@ def main(args):
         }
     
     # Setting up dataloaders
-    train_images = CustomDataset(data_csv=train_paths, root_dir=root_dataset, transform=customtransforms["train"])
+    train_images = CustomDataset(data_csv=train_paths, data_labels=train_labels, root_dir=root_dataset, test=False, transform=customtransforms["train"])
     train_loader = DataLoader(train_images, shuffle=True, batch_size=batch_size)
 
-    valid_images = CustomDataset(data_csv=valid_paths, root_dir=root_dataset, transform=customtransforms["valid"])
+    valid_images = CustomDataset(data_csv=valid_paths, data_labels=valid_labels, root_dir=root_dataset, test=False, transform=customtransforms["valid"])
     valid_loader = DataLoader(valid_images, shuffle=True, batch_size=batch_size)
 
     # Set up the model, loss function and optimizers
@@ -166,9 +169,9 @@ def main(args):
     lrs = []
 
     # Create labels list for confusion matrix
-    labels = args.labels.split(",")
-    labels = [i.strip() for i in labels]
-
+    label_temp = labels.split(",")
+    labels = [i.strip() for i in label_temp]
+    
     if len(labels) != target_size:
         print("Number of labels and target size do not match!")
         exit(0)
