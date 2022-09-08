@@ -3,6 +3,7 @@ import argparse
 import torch.nn as nn
 import onnx
 from model import CustomModel
+from loguru import logger 
 
 def main(args):
     model_path = args.model_path
@@ -13,7 +14,7 @@ def main(args):
     target_size = args.target_size
 
     # Load model
-    model = torch.load(model_path)
+    logger.info("Loading model...")
     model = CustomModel(model_name=model_name, target_size=target_size, pretrained=False)
     model.load_state_dict(torch.load(model_path)["state_dict"])
     model.eval()
@@ -25,7 +26,7 @@ def main(args):
 
     try:
         # Export the model
-        print("Exporting model...")
+        logger.info("Exporting model...")
         torch.onnx.export(model,               # model being run
                         x,                         # model input (or a tuple for multiple inputs)
                         onnx_name,   # where to save the model (can be a file or file-like object)
@@ -37,18 +38,18 @@ def main(args):
                         dynamic_axes={'input' : {0 : 'batch_size'},    # variable length axes
                                         'output' : {0 : 'batch_size'}})
 
-        print("Onnx model export successful!")
+        logger.info("Onnx model export successful!")
 
         # Test exported model
-        print("Checking generated onnx model")
+        logger.info("Checking generated onnx model")
         
         onnx_model = onnx.load(onnx_name)
         
         onnx.checker.check_model(onnx_model)
-        print("Onnx model checked!")
-    
+        logger.info("Onnx model checked!")
+        
     except Exception as e:
-        print("Exception occured : ", e)
+        logger.info("Exception occured : ", e)
 
 def arguement_parser():
     parser = argparse.ArgumentParser(description="Parse input for model training")

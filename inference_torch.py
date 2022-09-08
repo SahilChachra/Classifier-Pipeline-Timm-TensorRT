@@ -11,6 +11,7 @@ import numpy as np
 import gc
 from loguru import logger
 import pandas as pd
+from model import CustomModel
 
 def get_dataset_list(image_path):
     image_names = os.listdir(os.path.join(image_path, "train"))
@@ -32,11 +33,27 @@ def main(args):
     batch_size = args.batch_size
     img_size = args.img_size
     device = args.device
+    model_name = args.model_name
+    target_size = args.target_size
+
+    if "cuda" in device and torch.cuda.is_available():
+        device = "cuda"
+    else:
+        device = "cpu"
 
     # Setup model
-    model = torch.load(model_path)
+    try:
+        logger.info("Loading model...")
+        model = torch.load(model_path)
+        model = CustomModel(model_name=model_name, target_size=target_size, pretrained=False)
+        model.load_state_dict(torch.load(model_path)["state_dict"])
+        model.to(device)
+        logger.info("Model loaded...")
+    except Exception as e:
+        print("Exception occured : ", e)
 
     # Setup dataset
+    logger.info("Fetching images...")
     data_list = get_dataset_list(image_path)
     
     customtransforms = {
@@ -60,6 +77,7 @@ def main(args):
 
     progress = tqdm(test_loader, desc="Validation", total=len(test_loader))
 
+    logger.info("Inferencing...")
     for _, (images, img_path) in enumerate(progress):
     
         images = images.to(device)
@@ -78,7 +96,9 @@ def main(args):
         torch.cuda.empty_cache()
         del predictions, images, img_path
         gc.collect()
-    
+
+    logger.info("Inference complete!")
+
     # Print inference output
     actual_label = []
     actual_path = []
@@ -94,15 +114,19 @@ def main(args):
     df = pd.DataFrame(inf_output)
     df.to_csv("classifier_output.csv")
 
+    logger.info("Inference results saved as CSV")
+
 def arguement_parser():
     parser = argparse.ArgumentParser(description="Parse input for model training")
 
-    parser.add_argument('--model_path', type=str, default="classifier.pt", help="PyTorch model path")
+    parser.add_argument('--model_path', type=str, default="/home/sahil/Documents/Classifiers/weight_files/classifier_statedict_ep4_0.937.pt", help="PyTorch model path")
     parser.add_argument('--image_path', type=str, default="./images", help='Path to images')
     parser.add_argument('--labels', type=str, default="buildings, forests, mountains, glacier, street, sea", help='labels')
     parser.add_argument('--batch_size', type=int, default=4, help='batch size for inference')
     parser.add_argument('--img_size', type=int, default=224, help='Input image size')
     parser.add_argument('--device', type=str, default="cuda", help='Device')
+    parser.add_argument('--target_size', type=int, default=6, help='Number of classes')
+    parser.add_argument('--model_name', type=str, default="resnet50", help="Model name from Timm")
 
     args = parser.parse_args()
     return args
