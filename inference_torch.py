@@ -10,6 +10,7 @@ from tqdm import tqdm
 import numpy as np
 import gc
 from loguru import logger
+import pandas as pd
 
 def get_dataset_list(image_path):
     image_names = os.listdir(os.path.join(image_path, "train"))
@@ -77,9 +78,21 @@ def main(args):
         torch.cuda.empty_cache()
         del predictions, images, img_path
         gc.collect()
-        
+    
+    # Print inference output
+    actual_label = []
+    actual_path = []
+
     for label, image_name in zip(y_pred_list.astype("int").tolist(), image_path_list.tolist()):
         print("Image name : {0}, Label : {1}".format(image_name, labels[label]))
+        actual_label.append(labels[label])
+        actual_path.append(image_name)
+    
+    inf_output = {"image_path":actual_path, "label":actual_label}
+    
+    # Save inference in DataFrame 
+    df = pd.DataFrame(inf_output)
+    df.to_csv("classifier_output.csv")
 
 def arguement_parser():
     parser = argparse.ArgumentParser(description="Parse input for model training")
