@@ -12,8 +12,8 @@
 9. Albumentations for image augmentation
 11. Add options for Loss functions
 3. Multiple LR Schedulers
-X. Added Torch inference code
-X. Added Torch to onnx model export
+0. Added Torch inference code
+0. Added Torch to onnx model export
 
 ## To/Do
 
