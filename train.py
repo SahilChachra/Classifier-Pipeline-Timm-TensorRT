@@ -219,7 +219,7 @@ def main(args):
         epoch_end_time = time.time() # Timer for single epoch
         epoch_time = epoch_end_time-epoch_start_time
 
-        info = f"Epoch : {epoch}, Train loss : {train_loss_epoch:.3f}, Valid loss : {valid_loss_epoch:.3f}, Train acc : {train_accuracy_epoch:.3f}, Val acc : {valid_accuracy_epoch:.3f}, Time taken : {epoch_time/60} mins"
+        info = f"Epoch : {epoch}, Train loss : {train_loss_epoch:.3f}, Valid loss : {valid_loss_epoch:.3f}, Train acc : {train_accuracy_epoch:.3f}, Val acc : {valid_accuracy_epoch:.3f}, Time taken : {epoch_time/60:.3f} mins"
         tqdm.write(info)
 
         torch.cuda.empty_cache()

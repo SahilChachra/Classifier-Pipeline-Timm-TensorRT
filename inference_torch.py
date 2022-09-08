@@ -12,10 +12,15 @@ import gc
 from loguru import logger
 
 def get_dataset_list(image_path):
-    image_names = os.listdir(image_path)
+    image_names = os.listdir(os.path.join(image_path, "train"))
+    #print("image_names : ", image_names)
     image_list = []
+    c=0
     for image_name in image_names:
-        image_list.append(os.path.join(image_path, image_name))
+        image_list.append(os.path.join(image_path, "train", image_name))
+        if c==15: # TO READ ONLY 16 IMAGES
+            break
+        c=c+1
     return image_list
 
 @logger.catch()
@@ -52,7 +57,7 @@ def main(args):
     y_pred_list = []
     image_path_list = []
 
-    progress = tqdm(test_loader, desc="Validation", total=len(loader))
+    progress = tqdm(test_loader, desc="Validation", total=len(test_loader))
 
     for _, (images, img_path) in enumerate(progress):
     
@@ -62,7 +67,6 @@ def main(args):
             model.eval()
             predictions = model(images)
         
-        y_true = labels.long().squeeze()
         probabilities = torch.nn.functional.softmax(predictions, dim=1)
         top_prob, top_label = torch.topk(probabilities, 1)
         top_label = torch.flatten(top_label)
@@ -71,8 +75,11 @@ def main(args):
         image_path_list = np.concatenate((image_path_list, img_path), axis=0)
 
         torch.cuda.empty_cache()
-        del predictions, images, img_path, loss
+        del predictions, images, img_path
         gc.collect()
+        
+    for label, image_name in zip(y_pred_list.astype("int").tolist(), image_path_list.tolist()):
+        print("Image name : {0}, Label : {1}".format(image_name, labels[label]))
 
 def arguement_parser():
     parser = argparse.ArgumentParser(description="Parse input for model training")
