@@ -14,6 +14,7 @@
 3. Multiple LR Schedulers
 0. Added Torch inference code
 0. Added Torch to onnx model export
+0. Onnx inference code
 
 ## To/Do
 
