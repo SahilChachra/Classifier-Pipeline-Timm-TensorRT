@@ -37,7 +37,10 @@ def main(args):
         onnx.checker.check_model(model)
         onnx.helper.printable_graph(model.graph)
         logger.info("Model checked...")
-        
+    except:
+        logger.info("Error while setting up model...")
+
+    try:   
         logger.info("Running inference...")
         
         ort_session = ort.InferenceSession(model_path, providers=providers)
@@ -57,7 +60,7 @@ def main(args):
             print("Image : {0}, Class : {1}".format(image_name, labels[np.argmax(index)]))
 
     except Exception as e:
-        print("Exception occured : ", e)
+        logger.info("Exception occured : ", e)
 
     
 
