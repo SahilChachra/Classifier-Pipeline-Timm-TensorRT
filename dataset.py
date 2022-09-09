@@ -8,6 +8,15 @@ from torch.utils.data import Dataset
 # For Training the model
 class CustomDataset(Dataset):
     def __init__(self, data_csv, data_labels, root_dir, test=False, transform=None):
+        """
+        Parameters :-
+
+        data_csv : Pandas DataFrame with image_path as columns
+        data_labels : Pandas DataFrame with labels as columns
+        root_dir : Dataset root directory
+        test : Are we testing the model?
+        transform : Transforms
+        """
         self.data_csv = data_csv
         self.root_dir = root_dir
         self.transform = transform
@@ -32,6 +41,12 @@ class CustomDataset(Dataset):
 # For inferencing the model independently using Torch
 class CustomDatasetInf(Dataset):
     def __init__(self, data_list, transform=None):
+        """
+        Parameters :-
+        
+        data_list : List having image paths
+        transforms : transforms for testing
+        """
         self.data_list = data_list
         self.transform = transform
                     
