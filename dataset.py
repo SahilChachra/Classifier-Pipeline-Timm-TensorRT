@@ -5,6 +5,7 @@ from skimage import io
 import pandas as pd
 from torch.utils.data import Dataset
 
+# For Training the model
 class CustomDataset(Dataset):
     def __init__(self, data_csv, data_labels, root_dir, test=False, transform=None):
         self.data_csv = data_csv
@@ -28,6 +29,7 @@ class CustomDataset(Dataset):
         else:
             return [image]
 
+# For inferencing the model independently using Torch
 class CustomDatasetInf(Dataset):
     def __init__(self, data_list, transform=None):
         self.data_list = data_list
