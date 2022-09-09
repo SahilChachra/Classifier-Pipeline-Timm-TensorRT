@@ -12,11 +12,17 @@ def main(args):
     onnx_name = args.onnx_name
     model_name =args.model_name
     target_size = args.target_size
+    device = args.device
+    
+    if "cuda" in device and torch.cuda.is_available():
+        device = "cuda"
+    else:
+        device = "cpu"
 
     # Load model
     logger.info("Loading model...")
     model = CustomModel(model_name=model_name, target_size=target_size, pretrained=False)
-    model.load_state_dict(torch.load(model_path)["state_dict"])
+    model.load_state_dict(torch.load(model_path, map_location=torch.device(device))["state_dict"])
     model.eval()
 
     # Setup for export
@@ -60,7 +66,8 @@ def arguement_parser():
     parser.add_argument('--img_size', type=int, default=224, help='Input image size')
     parser.add_argument('--opset', type=int, default=11, help='Opset value for exporting the model')
     parser.add_argument('--onnx_name', type=str, default="classifier.onnx", help='Output model name(Onnx)')
-
+    parser.add_argument('--device', type=str, default="cuda", help='Device')
+    
     args = parser.parse_args()
     return args
 

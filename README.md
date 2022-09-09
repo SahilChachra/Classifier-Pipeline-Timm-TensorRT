@@ -1,4 +1,4 @@
-# Template for Binary/Multiclass classifier in PyTorch for Classification with Timm model Implementation and TensorRT Export
+# Template for Multiclass classifier in PyTorch for Classification with Timm model Implementation and TensorRT Export
 
 ## Features/Options
 1. Custom model file with Timm models
