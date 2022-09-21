@@ -127,6 +127,9 @@ def main(args):
     model = CustomModel(model_name=model_name, target_size=target_size, pretrained=True)
     model.to(device)
 
+    # Set up variable to torch.jit.script
+    m = torch.jit.script(CustomModel(model_name=model_name, target_size=target_size, pretrained=True))
+
     # Set up loss function
     loss_function_dict = {
                     "CrossEntropyLoss" : nn.CrossEntropyLoss(), 
@@ -203,7 +206,8 @@ def main(args):
             logger.info(f"Accuracy improved from {max_val_acc:.3f} to {valid_accuracy_epoch:.3f}!")
             state = {"epoch":epoch, 'state_dict':model.state_dict(), 'optimizer':optimizer.state_dict(), "loss":train_loss_epoch}
             torch.save(state, os.path.join(save_checkpoint_folder,f"classifier_statedict_ep{epoch}_{valid_accuracy_epoch:.3f}.pt"))
-            torch.save(model, os.path.join(save_model_folder,f"classifier_ep{epoch}_{valid_accuracy_epoch:.3f}.pt"))
+            #torch.save(model, os.path.join(save_model_folder,f"classifier_ep{epoch}_{valid_accuracy_epoch:.3f}.pt"))
+            m.save(f"classifier_ep{epoch}_{valid_accuracy_epoch:.3f}.pt") # Saves model as .pt using torch.jit.save
             max_val_acc = valid_accuracy_epoch
             no_val_acc_improve = 0
             best_model = model
