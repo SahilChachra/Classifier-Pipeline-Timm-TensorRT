@@ -44,14 +44,12 @@ img = cv2.resize(img, (224, 224))
 output = model([img])
 print(output)'''
 
-import tensorrt as trt
+'''import tensorrt as trt
 import numpy as np
 import os
 import cv2
 import pycuda.driver as cuda
 import pycuda.autoinit
-
-'''
 
 class HostDeviceMem(object):
     def __init__(self, host_mem, device_mem):
