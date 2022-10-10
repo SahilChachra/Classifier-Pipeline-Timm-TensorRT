@@ -12,6 +12,7 @@ import torch.nn as nn
 from torch import optim
 from torch.utils.data import DataLoader
 
+import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -25,14 +26,14 @@ from dataset import CustomDataset
 from model import CustomModel
 from utils import get_image_path, train_func, validation_func, save_confusion_matrix
 
-def prepare_dataset(root_dataset, train_csv_path, split):
+def prepare_dataset(root_dataset, train_csv_path, split, seed):
     train_data = pd.read_csv(train_csv_path)
 
     train_data["image_path"] = train_data["image_name"].apply(get_image_path)
 
     train_labels = train_data["label"]
 
-    train_paths, valid_paths, train_labels, valid_labels = train_test_split(train_data["image_path"], train_labels, test_size=split, random_state=22, stratify=train_labels)
+    train_paths, valid_paths, train_labels, valid_labels = train_test_split(train_data["image_path"], train_labels, test_size=split, random_state=seed, stratify=train_labels)
 
     train_paths.reset_index(drop=True, inplace=True)
     train_labels.reset_index(drop=True, inplace=True)
@@ -62,8 +63,14 @@ def main(args):
     labels = args.labels
     wandb = args.wandb
     project_name = args.project_name
+    seed = args.seed
+    workers = args.workers
     # image_folder = args.image_folder
-
+    
+    # Set seed to reporduce experiment
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    
     if wandb:
         try:
             import wandb
@@ -123,15 +130,20 @@ def main(args):
         logger.info("GPU/CUDA unavailable. Using CPU")   
     
     # Create dataset
-    train_paths, train_labels, valid_paths, valid_labels = prepare_dataset(root_dataset, train_csv_path, split)
+    train_paths, train_labels, valid_paths, valid_labels = prepare_dataset(root_dataset, train_csv_path, split, seed)
     
     # Setting up transforms
     customtransforms = {
         "train": A.Compose([
             #A.ToPILImage(),
             A.Resize(img_size, img_size),
-            A.Flip(), 
-            A.ShiftScaleRotate(rotate_limit=1.0, p=0.8),
+            A.HorizontalFlip(p=0.5), 
+            A.ShiftScaleRotate(rotate_limit=1.0, p=0.7),
+            A.RandomBrightnessContrast(p=0.5),
+            A.GaussianBlur(blur_limit=3, p=0.5),
+            A.GridDistortion(),
+            A.HueSaturationValue(),
+            A.RandomGamma(p=0.5),
             A.Normalize(p=1),
             ToTensorV2(p=1.0)
             ]
@@ -146,10 +158,10 @@ def main(args):
     
     # Setting up dataloaders
     train_images = CustomDataset(data_csv=train_paths, data_labels=train_labels, root_dir=root_dataset, test=False, transform=customtransforms["train"])
-    train_loader = DataLoader(train_images, shuffle=True, batch_size=batch_size)
+    train_loader = DataLoader(train_images, shuffle=True, batch_size=batch_size, worker_init_fn=seed, num_workres = workers)
 
     valid_images = CustomDataset(data_csv=valid_paths, data_labels=valid_labels, root_dir=root_dataset, test=False, transform=customtransforms["valid"])
-    valid_loader = DataLoader(valid_images, shuffle=True, batch_size=batch_size)
+    valid_loader = DataLoader(valid_images, shuffle=True, batch_size=batch_size, worker_init_fn=seed, num_workres = workers)
 
     # Set up the model, loss function and optimizers
     model = CustomModel(model_name=model_name, target_size=target_size, pretrained=True)
@@ -324,6 +336,8 @@ def arguement_parser():
     parser.add_argument('--labels', type=str, default="buildings, forests, mountains, glacier, street, sea", help="Comma seperated labels")
     parser.add_argument('--wandb', action='store_true', help='Use W&B for MLOps')
     parser.add_argument('--project_name', type=str, default="Classifier-Pipeline", help="Name of project")
+    parser.add_argument('--seed', type=int, default=22, help="Seed to reproduce experiment")
+    parser.add_argument('--workers', type=int, default=2, help="Number of workers")
     # parser.add_argument('--image_folder', type=str, default="train", help="Images folder name")
 
     args = parser.parse_args()
