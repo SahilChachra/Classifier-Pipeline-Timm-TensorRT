@@ -60,7 +60,35 @@ def main(args):
     loss_func = args.loss_func
     exp_name = args.exp_name
     labels = args.labels
+    wandb = args.wandb
+    project_name = args.project_name
     # image_folder = args.image_folder
+
+    if wandb:
+        try:
+            import wandb
+        except:
+            print("Wandb not installed. Running experiment without it.")
+            wandb = False
+        
+        wandb.login()
+
+        CONFIG = dict (
+            num_labels = target_size,
+            train_val_split = split,
+            img_width = img_size,
+            img_height = img_size,
+            batch_size = batch_size,
+            epochs = epochs,
+            learning_rate = learning_rate,
+            architecture = "CNN",
+            infra = "Local",
+            model_name = model_name,
+            optimizer_name = optimizer_name
+        )
+    
+        run = wandb.init(project=project_name, 
+                 config=CONFIG, group=model_name, job_type="train")
 
     save_checkpoint_folder = os.path.join(exp_name, args.save_checkpoint_folder)
     save_model_folder = os.path.join(exp_name,args.save_model_folder)
@@ -186,6 +214,9 @@ def main(args):
 
     start_time = time.time() # Timer for overall training time
     
+    if wandb:
+        wandb.watch(model, loss_function, log="all", log_freq=5)
+
     # Start Training
     for epoch in range(1,epochs+1):
         epoch_start_time = time.time() # Timer for single epoch
@@ -226,6 +257,10 @@ def main(args):
         info = f"Epoch : {epoch}, Train loss : {train_loss_epoch:.3f}, Valid loss : {valid_loss_epoch:.3f}, Train acc : {train_accuracy_epoch:.3f}, Val acc : {valid_accuracy_epoch:.3f}, Time taken : {epoch_time/60:.3f} mins"
         tqdm.write(info)
 
+        if wandb:
+            wandb.log({"Epoch":epoch, "Train_loss" : train_loss_epoch, "Valid_loss" : valid_loss_epoch, 
+                  "Train_acc" : train_accuracy_epoch, "Val_acc" : valid_accuracy_epoch})
+
         torch.cuda.empty_cache()
         gc.collect()
 
@@ -250,14 +285,22 @@ def main(args):
     # Generate confusion matrix for Train and Val set
     logger.info(f"Generating Confusion matrix for Train and Validation set using the best model")
 
-    valid_loss_epoch, valid_accuracy_epoch, conf_matrix = validation_func(epochs+1, best_model, train_loader, device, loss_function)
-    save_confusion_matrix(conf_matrix, labels, exp_name, name="Train_ConfusionMatrix")
+    train_loss_epoch, train_accuracy_epoch, train_conf_matrix = validation_func(epochs+1, best_model, train_loader, device, loss_function)
+    save_confusion_matrix(train_conf_matrix, labels, exp_name, name="Train_ConfusionMatrix")
 
-    valid_loss_epoch, valid_accuracy_epoch, conf_matrix = validation_func(epochs+1, best_model, valid_loader, device, loss_function)
-    save_confusion_matrix(conf_matrix, labels, exp_name, name="Valid_ConfusionMatrix")
+    valid_loss_epoch, valid_accuracy_epoch, valid_conf_matrix = validation_func(epochs+1, best_model, valid_loader, device, loss_function)
+    save_confusion_matrix(valid_conf_matrix, labels, exp_name, name="Valid_ConfusionMatrix")
+
+    if wandb:
+        wandb.log({"Best accuracy on Train set":train_accuracy_epoch, "Best accuracy on Val set":valid_accuracy_epoch})
+        wandb.log({"Train Confusion Matrix": wandb.Image(f"{exp_name}/Train_ConfusionMatrix.png")})
+        wandb.log({"Valid Confusion Matrix": wandb.Image(f"{exp_name}/Valid_ConfusionMatrix.png")})
 
     del best_model
     gc.collect()
+
+    if wandb:
+        run.finish()
 
 def arguement_parser():
     parser = argparse.ArgumentParser(description="Parse input for model training")
@@ -279,6 +322,8 @@ def arguement_parser():
     parser.add_argument('--save_model_folder', type=str, default="weights", help="Save weight file folder")
     parser.add_argument('--exp_name', type=str, default="exp1", help="Save experiment data")
     parser.add_argument('--labels', type=str, default="buildings, forests, mountains, glacier, street, sea", help="Comma seperated labels")
+    parser.add_argument('--wandb', action='store_true', help='Use W&B for MLOps')
+    parser.add_argument('--project_name', type=str, default="Classifier-Pipeline", help="Name of project")
     # parser.add_argument('--image_folder', type=str, default="train", help="Images folder name")
 
     args = parser.parse_args()
