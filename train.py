@@ -61,7 +61,7 @@ def main(args):
     loss_func = args.loss_func
     exp_name = args.exp_name
     labels = args.labels
-    wandb = args.wandb
+    wandb_flag = args.wandb
     project_name = args.project_name
     seed = args.seed
     workers = args.workers
@@ -71,12 +71,12 @@ def main(args):
     torch.manual_seed(seed)
     np.random.seed(seed)
     
-    if wandb:
+    if wandb_flag:
         try:
             import wandb
         except:
             print("Wandb not installed. Running experiment without it.")
-            wandb = False
+            wandb_flag = False
         
         wandb.login()
 
@@ -226,7 +226,7 @@ def main(args):
 
     start_time = time.time() # Timer for overall training time
     
-    if wandb:
+    if wandb_flag:
         wandb.watch(model, loss_function, log="all", log_freq=5)
 
     # Start Training
@@ -269,7 +269,7 @@ def main(args):
         info = f"Epoch : {epoch}, Train loss : {train_loss_epoch:.3f}, Valid loss : {valid_loss_epoch:.3f}, Train acc : {train_accuracy_epoch:.3f}, Val acc : {valid_accuracy_epoch:.3f}, Time taken : {epoch_time/60:.3f} mins"
         tqdm.write(info)
 
-        if wandb:
+        if wandb_flag:
             wandb.log({"Epoch":epoch, "Train_loss" : train_loss_epoch, "Valid_loss" : valid_loss_epoch, 
                   "Train_acc" : train_accuracy_epoch, "Val_acc" : valid_accuracy_epoch})
 
@@ -303,7 +303,7 @@ def main(args):
     valid_loss_epoch, valid_accuracy_epoch, valid_conf_matrix = validation_func(epochs+1, best_model, valid_loader, device, loss_function)
     save_confusion_matrix(valid_conf_matrix, labels, exp_name, name="Valid_ConfusionMatrix")
 
-    if wandb:
+    if wandb_flag:
         wandb.log({"Best accuracy on Train set":train_accuracy_epoch, "Best accuracy on Val set":valid_accuracy_epoch})
         wandb.log({"Train Confusion Matrix": wandb.Image(f"{exp_name}/Train_ConfusionMatrix.png")})
         wandb.log({"Valid Confusion Matrix": wandb.Image(f"{exp_name}/Valid_ConfusionMatrix.png")})
@@ -311,7 +311,7 @@ def main(args):
     del best_model
     gc.collect()
 
-    if wandb:
+    if wandb_flag:
         run.finish()
 
 def arguement_parser():
