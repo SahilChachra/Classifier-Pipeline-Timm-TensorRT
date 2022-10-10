@@ -12,6 +12,9 @@
 9. Albumentations for image augmentation
 11. Add options for Loss functions
 3. Multiple LR Schedulers
+0. Added WandB support
+0. Added Number of workers parameter
+0. Added Seed to help reproduce experiment
 0. Added Torch inference code
 0. Added Torch to onnx model export
 0. Onnx inference code
