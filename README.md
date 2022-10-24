@@ -4,7 +4,7 @@
 1. Custom model file with Timm models
 2. Custom dataset file
 4. Categorical Labels - [1], [2], [3]...
-7. Prints LR, Train Acc , Train loss, Val Acc and Val loss for each epoch.
+7. Prints Training condiguration
 8. Run validation on Train and test set and saved ConfusionMatrix as PNG.
 10. Use of garbage collector and torch's method to clear GPU cache
 5. Early stopping
@@ -18,6 +18,8 @@
 0. Added Torch inference code
 0. Added Torch to onnx model export
 0. Onnx inference code
+0. Onnx to TensorRT conversion code
+0. TensorRT inference code
 
 ## To/Do
 
