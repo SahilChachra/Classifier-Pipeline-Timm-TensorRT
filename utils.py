@@ -162,7 +162,8 @@ def get_lrscheduler(scheduler_name, optimizer):
         return torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=1, eta_min=0.001, last_epoch=-1)
 
 def get_loss_function(loss_func, target_size):
-    if target_size==2:
-        return nn.BCELoss()
+    if loss_func == "CrossEntropyLoss":
+        return torch.nn.CrossEntropyLoss()
     else:
-        return nn.CrossEntropyLoss()
+        logger.info("Unknown Loss function found! Using CrossEntropyLoss")
+        return torch.nn.CrossEntropyLoss()

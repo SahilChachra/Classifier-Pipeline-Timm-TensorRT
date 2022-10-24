@@ -100,12 +100,7 @@ def main(args):
     save_model_folder = os.path.join(exp_name,args.save_model_folder)
     
     # Display input parameters
-    logger.info(f"Training Settings : Epochs = {epochs}, \
-                    batch_size = {batch_size}, img_size = {img_size}, \
-                    optimizer_name = {optimizer_name}, learning_rate = {learning_rate}, \
-                    lr_scheduler = {lr_scheduler}, split ratio = {split}, loss_func = {loss_func}, \
-                    save_checkpoint_folder = {save_checkpoint_folder}, save_model_folder = {save_model_folder}, \
-                    exp_name = {exp_name}")
+    logger.info(f"Training Settings : Epochs = {epochs}, batch_size = {batch_size}, img_size = {img_size}, optimizer_name = {optimizer_name}, learning_rate = {learning_rate}, lr_scheduler = {lr_scheduler}, split ratio = {split}, loss_func = {loss_func}, save_checkpoint_folder = {save_checkpoint_folder}, save_model_folder = {save_model_folder}, exp_name = {exp_name}, seeds = {seed}, num_workers = {workers}")
 
     # Setup folders to save model, checkpoints and confusion matrix
     if not os.path.exists(exp_name):
@@ -184,9 +179,6 @@ def main(args):
             scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=learning_rate, max_lr=learning_rate*100,step_size_up=5,mode="triangular2"),
         else:
             scheduler = get_lrscheduler(lr_scheduler, optimizer)
-
-    del loss_function_dict
-    gc.collect()
 
     # Set up training variables
     train_loss = []
