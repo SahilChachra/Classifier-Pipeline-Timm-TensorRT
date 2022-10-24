@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+from torch import optim
+from loguru import logger
 
 def get_image_path(image_name):
     return os.path.join("/home/sahil/Documents/Classifiers/datasets/scene_classification", "train", image_name)
@@ -135,3 +137,32 @@ def save_confusion_matrix(c_m, labels, exp_name, name):
 
     # Saving plot
     plt.savefig(os.path.join(exp_name,name+'.png'), dpi=500)
+
+def get_optimizer(optimizer_name, model, learning_rate):
+
+    if optimizer_name == "Adam":
+        return optim.Adam(model.parameters(), lr=learning_rate)
+    
+    elif optimizer_name == "AdamW":
+        return optim.AdamW(model.parameters(), lr=learning_rate)
+    
+    elif optimizer_name == "SGD":
+        return optim.SGD(model.parameters(), lr=learning_rate)
+    
+    else:
+        logger.info("This optimizer is not yet present in the pipeline!")
+        logger.info("Using Adam by default!")
+        return optim.Adam(model.parameters(), lr=learning_rate)
+    
+def get_lrscheduler(scheduler_name, optimizer):
+    if scheduler_name == "CosineAnnealingLR":
+        return torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=0)
+    
+    elif scheduler_name == "CosineAnnealingWarmRestarts":
+        return torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=1, eta_min=0.001, last_epoch=-1)
+
+def get_loss_function(loss_func, target_size):
+    if target_size==2:
+        return nn.BCELoss()
+    else:
+        return nn.CrossEntropyLoss()

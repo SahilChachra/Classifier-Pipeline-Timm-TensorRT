@@ -21,11 +21,12 @@
 
 ## To/Do
 
-1. Add Output layer in the model (Binary/Multiclass Classifier)
+1. Add support for Binary classifier
 2. Create sample model from timm and check output of the model.
-12. Display Hardware usage
-13. Save training history
-14. Heatmap of features
+3. Heatmap of features
+4. Add LabelSmoothing
+5. Add Gradient Clipping
+6. Add Mixed Precision Training
 
 ## References
 1. [Scene Classification Dataset](https://www.kaggle.com/datasets/nitishabharathi/scene-classification)

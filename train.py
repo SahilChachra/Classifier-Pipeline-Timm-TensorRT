@@ -24,7 +24,7 @@ from loguru import logger
 
 from dataset import CustomDataset
 from model import CustomModel
-from utils import get_image_path, train_func, validation_func, save_confusion_matrix
+from utils import get_image_path, train_func, validation_func, save_confusion_matrix, get_optimizer, get_lrscheduler, get_loss_function
 
 def prepare_dataset(root_dataset, train_csv_path, split, seed):
     train_data = pd.read_csv(train_csv_path)
@@ -74,12 +74,11 @@ def main(args):
     if wandb_flag:
         try:
             import wandb
+            wandb.login()
         except:
             print("Wandb not installed. Running experiment without it.")
             wandb_flag = False
         
-        wandb.login()
-
         CONFIG = dict (
             num_labels = target_size,
             train_val_split = split,
@@ -99,7 +98,6 @@ def main(args):
 
     save_checkpoint_folder = os.path.join(exp_name, args.save_checkpoint_folder)
     save_model_folder = os.path.join(exp_name,args.save_model_folder)
-    
     
     # Display input parameters
     logger.info(f"Training Settings : Epochs = {epochs}, \
@@ -167,41 +165,27 @@ def main(args):
     model = CustomModel(model_name=model_name, target_size=target_size, pretrained=True)
     model.to(device)
 
-    # Set up variable to torch.jit.script
-    m = torch.jit.script(CustomModel(model_name=model_name, target_size=target_size, pretrained=True))
+    # Set up variable to torch.jit.script ---- Throwing error at times
+    # m = torch.jit.script(CustomModel(model_name=model_name, target_size=target_size, pretrained=True))
 
     # Set up loss function
-    loss_function_dict = {
-                    "CrossEntropyLoss" : nn.CrossEntropyLoss(), 
-                }
-    
-    loss_function = loss_function_dict[loss_func]
+    loss_function = get_loss_function(loss_func, target_size)
 
     # Set up Optimizer
-    optimizer_dict = {
-        "Adam" : optim.Adam(model.parameters(), lr=learning_rate),
-        "AdamW" : optim.AdamW(model.parameters(), lr=learning_rate),
-        "SGD" : optim.SGD(model.parameters(), lr=learning_rate)
-        }
-    optimizer = optimizer_dict[optimizer_name]
+    optimizer = get_optimizer(model, learning_rate)
 
     # Set up LR Scheduler
-    if optimizer_name not in ["SGD"] and lr_scheduler == "LambdaLR":
-        logger.info(f"Only SGD supports LambdaLR Scheduler. Setting Scheduler to None or restart training with correct params.")
-        lr_scheduler = None
-
     if lr_scheduler:
-        scheduler_dict = {
-            "CosineAnnealingLR" : torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=0),
-            "CosineAnnealingWarmRestarts" : torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=1, eta_min=0.001, last_epoch=-1)
-            }
-        if optimizer_name == "SGD" and lr_scheduler == "LambdaLR":
+        if optimizer_name not in ["SGD"] and lr_scheduler == "LambdaLR":
+            logger.info(f"Only SGD supports LambdaLR Scheduler. Setting Scheduler to None or restart training with correct params.")
+            lr_scheduler = None
+        
+        elif optimizer_name == "SGD" and lr_scheduler == "LambdaLR":
             scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=learning_rate, max_lr=learning_rate*100,step_size_up=5,mode="triangular2"),
         else:
-            scheduler = scheduler_dict[lr_scheduler]
-        del scheduler_dict
-    
-    del optimizer_dict, loss_function_dict
+            scheduler = get_lrscheduler(lr_scheduler, optimizer)
+
+    del loss_function_dict
     gc.collect()
 
     # Set up training variables
@@ -216,7 +200,7 @@ def main(args):
     labels = [i.strip() for i in label_temp]
     
     if len(labels) != target_size:
-        print("Number of labels and target size do not match!")
+        logger.info("Number of labels and target size do not match!")
         exit(0)
 
     # Initialize some extra variables
@@ -250,7 +234,7 @@ def main(args):
             state = {"epoch":epoch, 'state_dict':model.state_dict(), 'optimizer':optimizer.state_dict(), "loss":train_loss_epoch}
             torch.save(state, os.path.join(save_checkpoint_folder,f"classifier_statedict_ep{epoch}_{valid_accuracy_epoch:.3f}.pt"))
             #torch.save(model, os.path.join(save_model_folder,f"classifier_ep{epoch}_{valid_accuracy_epoch:.3f}.pt"))
-            m.save(f"classifier_ep{epoch}_{valid_accuracy_epoch:.3f}.pt") # Saves model as .pt using torch.jit.save
+            # m.save(f"classifier_ep{epoch}_{valid_accuracy_epoch:.3f}.pt") # Saves model as .pt using torch.jit.save
             max_val_acc = valid_accuracy_epoch
             no_val_acc_improve = 0
             best_model = model
