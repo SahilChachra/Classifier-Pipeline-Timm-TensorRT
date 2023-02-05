@@ -1,4 +1,4 @@
-# Pipeline for training Multiclass classifier in PyTorch for Classification with Timm model Implementation and TensorRT/Onnx Export
+# Pipeline for training Multiclass classifier in PyTorch with Timm model library and TensorRT/Onnx Export
 
 ## :question: How to use
 The script expects images/labels info stored in CSV file and dataset in folder. Check Scene Classification dataset example. Link in reference
