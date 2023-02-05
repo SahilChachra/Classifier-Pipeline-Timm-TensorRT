@@ -1,6 +1,14 @@
 # Pipeline for Multiclass classifier in PyTorch for Classification with Timm model Implementation and TensorRT/Onnx Export
 
-## Features/Options/Support
+##:question: How to use?
+The script exepects images/labels info stores in CSV file and dataset in folder. Check Scene Classification dataset example. Link in reference
+
+Command : python3 train.py --model_name resnet50 --epochs 100 --batch_size 64 --lr 0.0001 --img_size 256 --device 0 --optimizer adam --lr_scheduler CosineAnnealingLR --dataset /home/SceneData --split 0.2 --target_size 3 --early_stop 10 --loss_func CrossEntropyLoss --save_checkpoint_folder ./checkpoints --save_model_folder ./weights --exp_name testExp --labels night,day,noon --wandb --projec_name SceneClassifier --seed 22 --workers 4
+
+If you want to train on dataset which is stored in folders then pass :
+python3 train.py OTHER_ARGUEMENTS_AS_MENTIONED_ABOVE --image_folder flag along with --train_image_folder trainFolder --val_image_folder validFolder
+
+## :fire: Features/Options/Support
 1. Custom model file with Timm models
 2. Custom dataset file
 3. Creates Experiment folder allowing you to run continous training jobs.
@@ -23,14 +31,14 @@
 0. Added Onnx to TensorRT conversion code
 0. Added TensorRT inference code
 
-## To/Do
+## :golf: To/Do
 
 1. Heatmap of features
 2. Add LabelSmoothing
 3. Add Gradient Clipping
 4. Add Mixed Precision Training
 
-## References
+## :diamonds: References
 1. [Scene Classification Dataset](https://www.kaggle.com/datasets/nitishabharathi/scene-classification)
 2. Kaggle Notebook : [Transfer Learning with Timm](https://www.kaggle.com/code/hinepo/transfer-learning-with-timm-models-and-pytorch)
 3. Kaggle Notebook : [EfficientNet Mixup Leak free](https://www.kaggle.com/code/debarshichanda/efficientnetv2-mixup-leak-free)
