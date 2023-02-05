@@ -1,34 +1,34 @@
 # Template for Multiclass classifier in PyTorch for Classification with Timm model Implementation and TensorRT Export
 
-## Features/Options
+## Features/Options/Support
 1. Custom model file with Timm models
 2. Custom dataset file
-4. Categorical Labels - [1], [2], [3]...
-7. Prints Training condiguration
-8. Run validation on Train and test set and saved ConfusionMatrix as PNG.
+3. Creates Experiment folder allowing you to run continous training jobs.
+4. Support training for dataset stored in folder or in CSV
+5. Categorical Labels - [1], [2], [3]...
+7. Displays Training condiguration so you cross check the input
+8. Run validation on Train and test set and saves ConfusionMatrix as PNG.
 10. Use of garbage collector and torch's method to clear GPU cache
-5. Early stopping
-6. Save model checkpoint and weight file as accuracy improves
+5. Early stopping to save your time and resources
+6. Saves model checkpoint and weight file as accuracy improves
 9. Albumentations for image augmentation
-11. Add options for Loss functions
+11. Added options for Loss functions
 3. Multiple LR Schedulers
 0. Added WandB support
 0. Added Number of workers parameter
 0. Added Seed to help reproduce experiment
 0. Added Torch inference code
 0. Added Torch to onnx model export
-0. Onnx inference code
-0. Onnx to TensorRT conversion code
-0. TensorRT inference code
+0. Added Onnx inference code
+0. Added Onnx to TensorRT conversion code
+0. Added TensorRT inference code
 
 ## To/Do
 
-1. Add support for Binary classifier
-2. Create sample model from timm and check output of the model.
-3. Heatmap of features
-4. Add LabelSmoothing
-5. Add Gradient Clipping
-6. Add Mixed Precision Training
+1. Heatmap of features
+2. Add LabelSmoothing
+3. Add Gradient Clipping
+4. Add Mixed Precision Training
 
 ## References
 1. [Scene Classification Dataset](https://www.kaggle.com/datasets/nitishabharathi/scene-classification)

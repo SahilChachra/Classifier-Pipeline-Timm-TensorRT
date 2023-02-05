@@ -22,9 +22,9 @@ from albumentations.pytorch import ToTensorV2
 
 from loguru import logger
 
-from dataset import CustomDataset
+from dataset import CustomDataset, ImageFolder
 from model import CustomModel
-from utils import get_image_path, train_func, validation_func, save_confusion_matrix, get_optimizer, get_lrscheduler, get_loss_function
+from utils import get_image_path, train_func, validation_func, save_confusion_matrix, get_optimizer, get_lrscheduler, get_loss_function, set_datasetpath
 
 def prepare_dataset(root_dataset, train_csv_path, split, seed):
     train_data = pd.read_csv(train_csv_path)
@@ -65,11 +65,19 @@ def main(args):
     project_name = args.project_name
     seed = args.seed
     workers = args.workers
-    # image_folder = args.image_folder
+    image_folder = args.image_folder
+
+    if image_folder:
+        train_image_folder = args.train_image_folder
+        val_image_folder = args.val_image_folder
+        workers = 0
     
     # Set seed to reporduce experiment
     torch.manual_seed(seed)
     np.random.seed(seed)
+
+    # Set dataset path for utils.py
+    set_datasetpath(root_dataset)
     
     if wandb_flag:
         try:
@@ -90,7 +98,8 @@ def main(args):
             architecture = "CNN",
             infra = "Local",
             model_name = model_name,
-            optimizer_name = optimizer_name
+            optimizer_name = optimizer_name,
+            image_folder = image_folder
         )
     
         run = wandb.init(project=project_name, 
@@ -100,7 +109,7 @@ def main(args):
     save_model_folder = os.path.join(exp_name,args.save_model_folder)
     
     # Display input parameters
-    logger.info(f"Training Settings : Epochs = {epochs}, batch_size = {batch_size}, img_size = {img_size}, optimizer_name = {optimizer_name}, learning_rate = {learning_rate}, lr_scheduler = {lr_scheduler}, split ratio = {split}, loss_func = {loss_func}, save_checkpoint_folder = {save_checkpoint_folder}, save_model_folder = {save_model_folder}, exp_name = {exp_name}, seeds = {seed}, num_workers = {workers}")
+    logger.info(f"Training Settings : Epochs = {epochs}, batch_size = {batch_size}, img_size = {img_size}, optimizer_name = {optimizer_name}, learning_rate = {learning_rate}, lr_scheduler = {lr_scheduler}, split ratio = {split}, loss_func = {loss_func}, save_checkpoint_folder = {save_checkpoint_folder}, save_model_folder = {save_model_folder}, exp_name = {exp_name}, seeds = {seed}, num_workers = {workers}, image_folder = {image_folder}")
 
     # Setup folders to save model, checkpoints and confusion matrix
     if not os.path.exists(exp_name):
@@ -111,8 +120,7 @@ def main(args):
     
     if not os.path.exists(save_model_folder):
         os.mkdir(save_model_folder)
-
-    train_csv_path = os.path.join(root_dataset, "train.csv")
+    
     # images = os.path.join(root_dataset, image_folder)
 
     # Setup Device to train
@@ -123,10 +131,15 @@ def main(args):
         logger.info("GPU/CUDA unavailable. Using CPU")   
     
     # Create dataset
-    train_paths, train_labels, valid_paths, valid_labels = prepare_dataset(root_dataset, train_csv_path, split, seed)
+    if not image_folder:
+        # If running script on CSV and NOT folder
+        train_csv_path = os.path.join(root_dataset, "train.csv")
+
+        train_paths, train_labels, valid_paths, valid_labels = prepare_dataset(root_dataset, train_csv_path, split, seed)
     
     # Setting up transforms
-    customtransforms = {
+    if image_folder:
+        customtransforms = {
         "train": A.Compose([
             #A.ToPILImage(),
             A.Resize(img_size, img_size),
@@ -137,24 +150,55 @@ def main(args):
             A.GridDistortion(),
             A.HueSaturationValue(),
             A.RandomGamma(p=0.5),
-            A.Normalize(p=1),
-            ToTensorV2(p=1.0)
+            A.Normalize(p=1)
             ]
         ),
         "valid" : A.Compose([
                   #A.ToPILImage(),
                   A.Resize(img_size, img_size),
-                  A.Normalize(p=1.0),
-                  ToTensorV2(p=1.0)
+                  A.Normalize(p=1.0)
             ])
         }
+    else:
+        customtransforms = {
+            "train": A.Compose([
+                #A.ToPILImage(),
+                A.Resize(img_size, img_size),
+                A.HorizontalFlip(p=0.5), 
+                A.ShiftScaleRotate(rotate_limit=1.0, p=0.7),
+                A.RandomBrightnessContrast(p=0.5),
+                A.GaussianBlur(blur_limit=3, p=0.5),
+                A.GridDistortion(),
+                A.HueSaturationValue(),
+                A.RandomGamma(p=0.5),
+                A.Normalize(p=1),
+                ToTensorV2(p=1.0)
+                ]
+            ),
+            "valid" : A.Compose([
+                    #A.ToPILImage(),
+                    A.Resize(img_size, img_size),
+                    A.Normalize(p=1.0),
+                    ToTensorV2(p=1.0)
+                ])
+            }
     
     # Setting up dataloaders
-    train_images = CustomDataset(data_csv=train_paths, data_labels=train_labels, root_dir=root_dataset, test=False, transform=customtransforms["train"])
-    train_loader = DataLoader(train_images, shuffle=True, batch_size=batch_size, worker_init_fn=seed, num_workres = workers)
+    if image_folder:
+        train_images_path = os.path.join(root_dataset, train_image_folder)
+        valid_images_path = os.path.join(root_dataset, val_image_folder)
+        
+        train_images = ImageFolder(root_dir=train_images_path, transform=customtransforms["train"], total_classes=target_size)
 
-    valid_images = CustomDataset(data_csv=valid_paths, data_labels=valid_labels, root_dir=root_dataset, test=False, transform=customtransforms["valid"])
-    valid_loader = DataLoader(valid_images, shuffle=True, batch_size=batch_size, worker_init_fn=seed, num_workres = workers)
+        valid_images = ImageFolder(root_dir=train_images_path, transform=customtransforms["valid"], total_classes=target_size)
+    else:
+        train_images = CustomDataset(data_csv=train_paths, data_labels=train_labels, root_dir=root_dataset, test=False, transform=customtransforms["train"])
+        
+        valid_images = CustomDataset(data_csv=valid_paths, data_labels=valid_labels, root_dir=root_dataset, test=False, transform=customtransforms["valid"])
+        
+    
+    train_loader = DataLoader(train_images, shuffle=True, batch_size=batch_size, worker_init_fn=seed, num_workers = workers)
+    valid_loader = DataLoader(valid_images, shuffle=True, batch_size=batch_size, worker_init_fn=seed, num_workers = workers)
 
     # Set up the model, loss function and optimizers
     model = CustomModel(model_name=model_name, target_size=target_size, pretrained=True)
@@ -167,7 +211,7 @@ def main(args):
     loss_function = get_loss_function(loss_func, target_size)
 
     # Set up Optimizer
-    optimizer = get_optimizer(model, learning_rate)
+    optimizer = get_optimizer(optimizer_name, model, learning_rate)
 
     # Set up LR Scheduler
     if lr_scheduler:
@@ -225,7 +269,7 @@ def main(args):
             logger.info(f"Accuracy improved from {max_val_acc:.3f} to {valid_accuracy_epoch:.3f}!")
             state = {"epoch":epoch, 'state_dict':model.state_dict(), 'optimizer':optimizer.state_dict(), "loss":train_loss_epoch}
             torch.save(state, os.path.join(save_checkpoint_folder,f"classifier_statedict_ep{epoch}_{valid_accuracy_epoch:.3f}.pt"))
-            #torch.save(model, os.path.join(save_model_folder,f"classifier_ep{epoch}_{valid_accuracy_epoch:.3f}.pt"))
+            torch.save(model, os.path.join(save_model_folder,f"classifier_ep{epoch}_{valid_accuracy_epoch:.3f}.pt"))
             # m.save(f"classifier_ep{epoch}_{valid_accuracy_epoch:.3f}.pt") # Saves model as .pt using torch.jit.save
             max_val_acc = valid_accuracy_epoch
             no_val_acc_improve = 0
@@ -314,7 +358,9 @@ def arguement_parser():
     parser.add_argument('--project_name', type=str, default="Classifier-Pipeline", help="Name of project")
     parser.add_argument('--seed', type=int, default=22, help="Seed to reproduce experiment")
     parser.add_argument('--workers', type=int, default=2, help="Number of workers")
-    # parser.add_argument('--image_folder', type=str, default="train", help="Images folder name")
+    parser.add_argument('--image_folder', action='store_true', help='Set script to run on Folder')
+    parser.add_argument('--train_image_folder', type=str, default="train", help='Path to training data')
+    parser.add_argument('--val_image_folder', type=str, default="val", help='Path to validation data')
 
     args = parser.parse_args()
     return args

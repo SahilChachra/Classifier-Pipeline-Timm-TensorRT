@@ -4,6 +4,7 @@ import os
 from skimage import io
 import pandas as pd
 from torch.utils.data import Dataset
+import numpy as np
 
 # For Training the model
 class CustomDataset(Dataset):
@@ -71,7 +72,6 @@ class ImageFolder(Dataset):
         img = torch.from_numpy(img)
         img = img.permute(2, 0, 1)
         #print(type(img),img.shape, target)
-            
         
         return img,target 
 

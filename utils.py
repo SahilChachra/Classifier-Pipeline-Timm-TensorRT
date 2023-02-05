@@ -8,8 +8,15 @@ from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDis
 from torch import optim
 from loguru import logger
 
+dataset_path = ""
+
+def set_datasetpath(path_):
+    global dataset_path 
+    dataset_path = path_
+
 def get_image_path(image_name):
-    return os.path.join("/home/sahil/Documents/Classifiers/datasets/scene_classification", "train", image_name)
+    global dataset_path
+    return os.path.join(dataset_path, image_name)
 
 def train_func(epoch, model, loader, device, optimizer, loss_function):
     
@@ -167,3 +174,8 @@ def get_loss_function(loss_func, target_size):
     else:
         logger.info("Unknown Loss function found! Using CrossEntropyLoss")
         return torch.nn.CrossEntropyLoss()
+
+# Only for testing Utils.py!
+if __name__ == "__main__":
+    set_datasetpath("local")
+    print(get_image_path("img.jpg"))
