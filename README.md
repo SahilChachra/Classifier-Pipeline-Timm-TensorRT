@@ -8,7 +8,7 @@ Command : `python3 train.py --model_name resnet50 --epochs 100 --batch_size 64 -
 If you want to train on dataset which is stored in folders then pass :
 `python3 train.py OTHER_ARGUEMENTS_AS_MENTIONED_ABOVE --image_folder flag along with --train_image_folder trainFolder --val_image_folder validFolder`
 
-In this case, dataset structure should be like ->
+In this case, dataset structure should be like -> \
 DatasetName \
 &emsp;|-> train_data \
 &emsp;&emsp;|-> class_1 \
