@@ -1,0 +1,14 @@
+numpy
+torch
+albumentations
+pandas
+scikit-image
+pillow
+tqdm
+loguru
+timm
+onnx
+tensorrt
+scikit-learn
+onnxruntime
+opencv-python

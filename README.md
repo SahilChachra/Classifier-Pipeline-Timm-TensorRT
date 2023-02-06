@@ -49,6 +49,11 @@ DatasetName \
 3. Add Gradient Clipping
 4. Add Mixed Precision Training
 
+## :anger: Set up your enviroment
+1. Install venv (recommended)
+2. Install all the requirements using requirements.txt
+3. To install TensorRT, refer [Nvidia's Link](https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html)
+
 ## :diamonds: References
 1. [Scene Classification Dataset](https://www.kaggle.com/datasets/nitishabharathi/scene-classification)
 2. Kaggle Notebook : [Transfer Learning with Timm](https://www.kaggle.com/code/hinepo/transfer-learning-with-timm-models-and-pytorch)
