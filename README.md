@@ -49,7 +49,7 @@ DatasetName \
 3. Add Gradient Clipping
 4. Add Mixed Precision Training
 
-## :anger: Set up your enviroment
+## :anger: Set up your environment
 1. Install venv (recommended)
 2. Install all the requirements using requirements.txt
 3. To install TensorRT, refer [Nvidia's Link](https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html)
